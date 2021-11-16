@@ -5,6 +5,17 @@ import matplotlib.pyplot as plt
 def near(x, y):
     return abs(x - y) < 1E-4
 
+def calc_integral(f, a, b, n_pts = 500):
+    delta = (b - a) / n_pts
+    res = 0
+    for i in range(1, n_pts):
+        res += f(a + delta * i) * delta
+    res += 0.5 * f(a) * delta
+    res += 0.5 * f(b) * delta
+    return res
+
+
+
 class Calc:
     TASK_TYPE_COLLOC = 0
     TASK_TYPE_RITZ = 1
@@ -199,6 +210,14 @@ class Calc:
         tmp += self.q_x(x) * (self.a1 * (x ** self.n1) + self.a2 * (x ** self.n2) + self.a3 * (x ** self.n3) + self.a4)
         return tmp
 
+    def calc_int_a_phi_phi(self, i, j):
+        tmp_func = lambda x : (-self.k_x(x) * self.d2_phi_i_x(i, x) - self.dk_x(x) * self.d_phi_i_x(i, x) + self.q_x(x) * self.phi_i_x(i, x)) * self.phi_i_x(j, x)
+        return calc_integral(tmp_func, self.a, self.b)
+
+    def calc_int_f_phi(self, j):
+        tmp_func = lambda x: -self.get_f_x(x) * self.phi_i_x(j, x)
+        return calc_integral(tmp_func, self.a, self.b)
+
     def solve_colloc(self):
     # solves a task with method of collocations
     # result vector of constants saves to self.const_res_colloc_vector
@@ -231,15 +250,33 @@ class Calc:
         # print(res)
         return res
 
+    def solve_ritz(self, N):
+        self.task_type = 1
+
+        A = np.zeros((N, N))
+        F = np.zeros((N, 1))
+
+        for j in range(1, N + 1):
+            F[j - 1][0] = self.calc_int_f_phi(j)
+            for i in range(1, N + 1):
+                A[j - 1][i - 1] = self.calc_int_a_phi_phi(i, j)
+        res = np.linalg.solve(A, F)
+        self.const_res_ritz_vector = res
+        return res
+
+
     def solution_real_x(self, x):
         return self.a1 * (x ** self.n1) + self.a2 * (x ** self.n2) + self.a3 * (x ** self.n3) + self.a4
 
     def solution_modeled_x(self, x):
         res = 0
-        for i in range(0, len(self.const_res_colloc_vector)):
-            res += self.const_res_colloc_vector[i] * self.phi_i_x(i + 1, x)
+        if self.task_type == 0:
+            for i in range(0, len(self.const_res_colloc_vector)):
+                res += self.const_res_colloc_vector[i] * self.phi_i_x(i + 1, x)
+        elif self.task_type == 1:
+            for i in range(0, len(self.const_res_ritz_vector)):
+                res += self.const_res_ritz_vector[i] * self.phi_i_x(i + 1, x)
         return res
-
 
     def print_comparation_plot(self):
         x = np.linspace(self.a, self.b, 100)
@@ -247,18 +284,25 @@ class Calc:
         y_2 = self.solution_real_x(x)
 
         plt.plot(x, y_1, 'red',  x, y_2, 'blue')
-        plt.title(f'Метод колокацій, n = {len(self.colloc_pnts)}')
+        if self.task_type == 0:
+            plt.title(f'Метод колокацій, n = {len(self.colloc_pnts)}, deviation = {self.calc_deviation()}')
+        elif self.task_type == 1:
+            plt.title(f'Метод Рітца, n = {len(self.const_res_ritz_vector)}, deviation = {self.calc_deviation()}')
         plt.show()
 
     def calc_discrepancy_x(self, x):
         return -self.k_x(x) * self.d2_u_x(x) + (self.p_x(x) - self.dk_x(x)) * self.du_x(x) + self.q_x(x) * self.u_x(x) - self.get_f_x(x)
 
     def print_discrepancy_table(self):
-        print('--- Нев\'язка ---')
-        for i in range(0, len(self.colloc_pnts)):
-            x = self.colloc_pnts[i]
-            print('| ' + "%4f" % x + ' | ' + "%12f" % self.calc_discrepancy_x(x) + ' | ')
+        if self.task_type == 0:
+            print('--- Нев\'язка ---')
+            for i in range(0, len(self.colloc_pnts)):
+                x = self.colloc_pnts[i]
+                print('| ' + "%4f" % x + ' | ' + "%12f" % self.calc_discrepancy_x(x) + ' | ')
 
+    def calc_deviation(self):
+        tmp_func = lambda x: (self.solution_real_x(x) - self.solution_modeled_x(x)) ** 2
+        return math.sqrt(calc_integral(tmp_func, self.a, self.b))
 
 
     def set_phi_type(self, phi):

@@ -91,6 +91,8 @@ if __name__ == '__main__':
         tmp.push_colloc_pnt(float(i) / 10)
 
     tmp.solve_colloc()
+    # tmp.solve_ritz(7)
+
     tmp.print_discrepancy_table()
     tmp.print_comparation_plot()
 
