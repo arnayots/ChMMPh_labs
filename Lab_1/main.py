@@ -90,7 +90,7 @@ if __name__ == '__main__':
     for i in range (11, 49):
         tmp.push_colloc_pnt(float(i) / 10)
 
-    tmp.solve()
+    tmp.solve_colloc()
     tmp.print_discrepancy_table()
     tmp.print_comparation_plot()
 
