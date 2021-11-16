@@ -77,11 +77,21 @@ if __name__ == '__main__':
     tmp = Calc()
     tmp.set_phi_type(1)
 
-    print(tmp.phi_i_x(1, 3))
-    tmp.push_colloc_pnt(1.5)
-    tmp.push_colloc_pnt(2)
-    tmp.push_colloc_pnt(3)
+    # print(tmp.phi_i_x(1, 3))
+    # tmp.push_colloc_pnt(1.1)
+    # tmp.push_colloc_pnt(2)
+    # tmp.push_colloc_pnt(3)
+    # tmp.push_colloc_pnt(4)
+    # tmp.push_colloc_pnt(4.2)
+    # tmp.push_colloc_pnt(4.5)
+    # tmp.push_colloc_pnt(4.7)
+    # tmp.push_colloc_pnt(4.9)
+
+    for i in range (11, 49):
+        tmp.push_colloc_pnt(float(i) / 10)
+
     tmp.solve()
+    tmp.print_discrepancy_table()
     tmp.print_comparation_plot()
 
     print('end')
