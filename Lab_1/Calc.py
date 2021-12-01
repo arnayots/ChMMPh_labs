@@ -14,8 +14,6 @@ def calc_integral(f, a, b, n_pts = 500):
     res += 0.5 * f(b) * delta
     return res
 
-
-
 class Calc:
     TASK_TYPE_COLLOC = 0
     TASK_TYPE_RITZ = 1
@@ -43,12 +41,12 @@ class Calc:
         self.q1 = 2
         self.q2 = 1
         self.a1 = 1
-        self.a2 = 2
+        self.a2 = -3
         self.a3 = 3
         self.a4 = 4
-        self.n1 = 7
-        self.n2 = 4
-        self.n3 = 2
+        self.n1 = 1
+        self.n2 = 2
+        self.n3 = 3
 
         self.alpha = self.a1 * self.a ** self.n1 \
                      + self.a2 * self.a ** self.n2 \
@@ -131,7 +129,7 @@ class Calc:
             return (x - self.a) ** 2 * (self.b - x) ** (i - 1)
             # return ((x - self.a) ** i) * (self.b - x)
         elif self.phi_type == 2:
-            return (x - self.a) ** (i - 1) * (self.b - x) ** 2
+            return ((x - self.a) ** (i - 1)) * ((self.b - x) ** 2)
             # return (x - self.a) * ((self.b - x) ** i)
         elif self.phi_type == 3:
             return False
@@ -149,7 +147,8 @@ class Calc:
             return 2 * (x - self.a) * (self.b - x) ** (i - 1)
             # return (x - self.a) ** (i - 1) * (self.a + i * (self.b - x) - x)
         elif self.phi_type == 2:
-            return (i - 1) * (self.b - x) ** 2 * (x - self.a) ** (i - 2) - 2 * (self.b - x) - (x - self.a) ** (i - 1)
+            return (self.b - x) * (x - self.a) ** (i - 2) * (self.a * 2 + self.b * (i - 1) - (i + 1) * x)
+            # return (i - 1) * (self.b - x) ** 2 * (x - self.a) ** (i - 2) - 2 * (self.b - x) - (x - self.a) ** (i - 1)
             # return (self.b - x) ** (i - 1) * (self.a * i + self.b - (i + 1) * x)
         elif self.phi_type == 3:
             return False
@@ -215,7 +214,7 @@ class Calc:
         return calc_integral(tmp_func, self.a, self.b)
 
     def calc_int_f_phi(self, j):
-        tmp_func = lambda x: -self.get_f_x(x) * self.phi_i_x(j, x)
+        tmp_func = lambda x: self.get_f_x(x) * self.phi_i_x(j, x)
         return calc_integral(tmp_func, self.a, self.b)
 
     def solve_colloc(self):
@@ -314,5 +313,4 @@ class Calc:
     def push_colloc_pnt(self, pnt):
         self.colloc_pnts.append(pnt)
         self.n_phi = len(self.colloc_pnts)
-
 
