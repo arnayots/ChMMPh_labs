@@ -79,8 +79,14 @@ class calc:
             return self.delta
         return self.c1 * (x ** self.p1) + self.c2 * (x ** self.p2) + self.c3
 
+    def p_i(self, i):
+        return self.p_x(self.y_i[i])
+
     def q_x(self, x):
         return self.d1 * (x ** self.q1) + self.d2 * (x ** self.q2) + self.d3
+
+    def q_i(self, i):
+        return self.q_x(self.y_i[i])
 
     def get_f_x(self, x):
         if near(x, self.a):
@@ -113,6 +119,10 @@ class calc:
             return (2 * self.vec_a[i] + self.vec_a[i + 1]) / (self.h ** 2)
         elif self.diff_type == 1:
             return self.vec_a[i] / (self.h ** 2) + 1 / self.h
+        elif self.diff_type == 2:
+            return self.vec_a[i] / (self.h ** 2)
+        elif self.diff_type == 3:
+            return self.vec_a[i] / (self.h ** 2)
         return 0
 
     def __get_B_i__(self, i):
@@ -120,6 +130,10 @@ class calc:
             return self.vec_a[i] / (self.h ** 2) - 1 / self.h
         elif self.diff_type == 1:
             return self.vec_a[i + 1] / (self.h ** 2)
+        elif self.diff_type == 2:
+            return self.vec_a[i + 1] / (self.h ** 2)
+        elif self.diff_type == 3:
+            return self.vec_a[i + 1] / (self.h ** 2) - self.p_i(i) / self.h
         return 0
 
     def __get_C_i__(self, i):
@@ -127,6 +141,10 @@ class calc:
             return - ((self.vec_a[i + 1] - 3 * self.vec_a[i]) / (self.h ** 2) + 1 / self.h)
         elif self.diff_type == 1:
             return self.vec_a[i + 1] / (self.h ** 2) + self.vec_a[i] / (self.h ** 2) + 1 / self.h
+        elif self.diff_type == 2:
+            return self.vec_a[i + 1] / (self.h ** 2) + self.vec_a[i] / (self.h ** 2) + self.q_i(i)
+        elif self.diff_type == 3:
+            return self.vec_a[i + 1] / (self.h ** 2) + self.vec_a[i] / (self.h ** 2) + self.q_i(i) - self.p_i(i) / self.h
         return 0
 
     def __get_F_i__(self, i):
@@ -135,28 +153,28 @@ class calc:
     def __get_x1__(self):
         if self.diff_type == 0:
             return self.vec_a[1] * self.y_i[1] / (self.vec_a[1] + self.h * self.sigma1_new)
-        elif self.diff_type == 1:
+        elif self.diff_type == 1 or self.diff_type == 2 or self.diff_type == 3:
             return self.vec_a[1] / (self.h * self.sigma1_new + self.vec_a[1])
         return 0
 
     def __get_x2__(self):
         if self.diff_type == 0:
             return self.vec_a[self.N] * self.y_i[self.N - 1] / (self.vec_a[self.N] + self.h * self.sigma2_new)
-        elif self.diff_type == 1:
+        elif self.diff_type == 1 or self.diff_type == 2 or self.diff_type == 3:
             return - self.vec_a[self.N] / (self.sigma2_new * self.h - self.vec_a[self.N])
         return 0
 
     def __get_mu1_new__(self):
         if self.diff_type == 0:
             return (self.mu_1 + 0.5 * self.h * self.__get_F_i__(0)) / (self.vec_a[0] / self.h + self.sigma1_new)
-        elif self.diff_type == 1:
+        elif self.diff_type == 1 or self.diff_type == 2 or self.diff_type == 3:
             return self.mu_1_middle / (self.sigma1_new + self.vec_a[1] / self.h)
         return 0
 
     def __get_mu2_new__(self):
         if self.diff_type == 0:
             return (self.mu_2 + 0.5 * self.h * self.__get_F_i__(self.N)) / (self.vec_a[self.N] / self.h + self.sigma2_new)
-        elif self.diff_type == 1:
+        elif self.diff_type == 1 or self.diff_type == 2 or self.diff_type == 3:
             return self.mu_2_middle / (self.sigma2_new - self.vec_a[self.N] / self.h)
         return 0
 
