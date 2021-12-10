@@ -261,6 +261,7 @@ class Calc:
                 A[j - 1][i - 1] = self.calc_int_a_phi_phi(i, j)
         res = np.linalg.solve(A, F)
         self.const_res_ritz_vector = res
+        if self.task_type == 1: raise ValueError('invalid')
         return res
 
 

@@ -1,5 +1,4 @@
 from Calc import Calc
-# import aprsolv
 
 if __name__ == '__main__':
     print('start')
@@ -28,10 +27,9 @@ if __name__ == '__main__':
     # for i in range (11, 49, 1):
     #     tmp.push_colloc_pnt(float(i) / 10)
 
-    # tmp.solve_colloc()
+    tmp.solve_colloc()
     # tmp.solve_ritz(10)
-
-    # tmp2 = aprsolv.ApproxSolver()
-    # tmp2.Ritz(4)
+    tmp.print_discrepancy_table()
+    tmp.print_comparation_plot()
 
     print('end')
