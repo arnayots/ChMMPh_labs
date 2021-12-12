@@ -259,20 +259,31 @@ class calc:
         # self.left[0][1] = self.vec_a[1] / self.h
         # self.left[self.N][self.N] = self.vec_a[self.N] / self.h - (self.delta * self.k_i(self.N) / self.gamma + 0.5 * self.h * self.q_i(self.N))
         # self.left[self.N][self.N - 1] = - self.vec_a[self.N] / self.h
-        self.left[0][0] = - self.alpha / self.h - self.beta
-        self.left[0][1] = self.alpha / self.h
-        self.left[self.N][self.N] = self.gamma / self.h + self.delta
-        self.left[self.N][self.N - 1] = - self.gamma / self.h
+        mu_1_new = self.h * self.__get_F_i__(0) * 0.5
+        mu_2_new = self.h * self.__get_F_i__(self.N) * 0.5
+        sigma_1_old = self.beta * self.k_i(0) / self.alpha
+        sigma_2_old = self.delta * self.k_i(self.N) / self.gamma
+        sigma_1_new = sigma_1_old * (1 + self.h * 0.5 * self.p_i(0) / self.k_i(0)) + self.h * 0.5 * self.q_i(0)
+        sigma_2_new = sigma_2_old * (1 + self.h * 0.5 * self.p_i(self.N) / self.k_i(self.N)) + self.h * 0.5 * self.q_i(self.N)
+
+
+        self.left[0][0] = sigma_1_new + self.k_x(self.y_i[0] + self.h * 0.5) / self.h
+        self.left[0][1] = - self.k_x(self.y_i[0] + self.h * 0.5) / self.h
+        self.left[self.N][self.N] = sigma_2_new + self.k_x(self.y_i[self.N] - self.h * 0.5) / self.h
+        self.left[self.N][self.N - 1] = - self.k_x(self.y_i[self.N] - self.h * 0.5) / self.h
         for i in range(1, self.N):
-            self.left[i][i - 1] = self.k_i(i) / (self.h ** 2)
-            self.left[i][i] = - self.k_i(i + 1) / (self.h ** 2) - self.k_i(i) / (self.h ** 2) + (self.p_i(i) + self.q_i(i)) / self.h
-            self.left[i][i + 1] = self.k_i(i + 1) / (self.h ** 2) - (self.p_i(i) + self.q_i(i)) / self.h
+            self.left[i][i - 1] = - self.vec_a[i] / (self.h ** 2) - self.p_x(self.y_i[i] - self.h * 0.5) * 0.5 / self.h
+            self.left[i][i] = self.q_i(i) + (self.vec_a[i + 1] + self.vec_a[i]) / (self.h ** 2) + (self.p_x(self.y_i[i] - self.h * 0.5) - self.p_x(self.y_i[i] + self.h * 0.5)) * 0.5 / self.h
+            self.left[i][i + 1] = - self.vec_a[i + 1] / (self.h ** 2) + self.p_x(self.y_i[i] + self.h * 0.5) * 0.5 / (self.h ** 2)
+            # self.left[i][i - 1] = self.k_i(i) / (self.h ** 2)
+            # self.left[i][i] = - self.k_i(i + 1) / (self.h ** 2) - self.k_i(i) / (self.h ** 2) + (self.p_i(i) + self.q_i(i)) / self.h
+            # self.left[i][i + 1] = self.k_i(i + 1) / (self.h ** 2) - (self.p_i(i) + self.q_i(i)) / self.h
 
         self.right = np.zeros((self.N + 1, 1))
-        self.right[0][0] = 0
-        self.right[self.N][0] = 0
-        for i in range(1, self.N):
-            self.right[i][0] = - self.__get_F_i__(i)
+        self.right[0][0] = mu_1_new
+        self.right[self.N][0] = mu_2_new
+        for i in range(1, self. N):
+            self.right[i][0] = self.__get_F_i__(i)
 
         # print(self.left)
         # print(self.left.shape)
