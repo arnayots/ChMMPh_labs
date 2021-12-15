@@ -1,6 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+debug = True
+debug = False
+
 def near(x, y):
     return abs(x - y) < 1E-4
 
@@ -36,10 +39,6 @@ class calc:
         self.n2 = 4
         self.n3 = 2
 
-        # self.a = 0
-        # self.b = 1
-
-        # self.a2 = 1
 
         self.n1 = 1
         self.n2 = 2
@@ -290,14 +289,17 @@ class calc:
         # print(self.right)
         # print(self.right.shape)
         res = np.linalg.solve(self.left, self.right)
-        print(res)
-        print(res.shape)
+        if debug:
+            print(res)
+            print(res.shape)
 
         x_arr = []
         u_arr = []
         y_arr = []
+
         for i in range(0, self.N + 1):
-            print(f'i: {i}, x_i: {self.y_i[i]}, u_i: {self.solution_real_x(self.y_i[i])}, y_i: {res[i]}')
+            if debug:
+                print(f'i: {i}, x_i: {self.y_i[i]}, u_i: {self.solution_real_x(self.y_i[i])}, y_i: {res[i]}')
             x_arr.append(self.y_i[i])
             u_arr.append(self.solution_real_x(self.y_i[i]))
             y_arr.append(res[i][0])
@@ -305,84 +307,91 @@ class calc:
         # fig = plt.figure()
         plt.plot(x_arr, u_arr, x_arr, y_arr)
         plt.plot(x_arr, u_arr, x_arr, y_arr)
+        plt.title(f"Number of points = {self.N + 1}")
         plt.show()
 
-        print('division:')
-        tmp_left = self.vec_a[1] * (res[1] - res[0]) / self.h
-        tmp_right = self.sigma1_new * res[0] - self.mu_1_middle
-        print(f'left  : {tmp_left}   {tmp_right}   {tmp_right - tmp_left}')
-        tmp_left = self.vec_a[self.N] * (res[self.N] - res[self.N - 1]) / self.h
-        tmp_right = self.sigma2_new * res[self.N] - self.mu_2_middle
-        print(f'right : {tmp_left}   {tmp_right}   {tmp_right - tmp_left}')
+        if debug:
+            print('division:')
+            tmp_left = self.vec_a[1] * (res[1] - res[0]) / self.h
+            tmp_right = self.sigma1_new * res[0] - self.mu_1_middle
+            print(f'left  : {tmp_left}   {tmp_right}   {tmp_right - tmp_left}')
+            tmp_left = self.vec_a[self.N] * (res[self.N] - res[self.N - 1]) / self.h
+            tmp_right = self.sigma2_new * res[self.N] - self.mu_2_middle
+            print(f'right : {tmp_left}   {tmp_right}   {tmp_right - tmp_left}')
 
 
-        if self.diff_type == 0:
+            if self.diff_type == 0:
+                for i in range(1, self.N):
+                    tmp_left = (self.vec_a[i+1] - self.vec_a[i]) * (self.y_i[i] - self.y_i[i-1]) / (self.h ** 2) + \
+                               self.vec_a[i] * (self.y_i[i-1] - 2 * self.y_i[i] + self.y_i[i+1]) / (self.h ** 2) - \
+                               self.y_i[i+1] / self.h + self.y_i[i] / self.h
+                    tmp_right = self.get_f_x(self.y_i[i])
+                    print(f' {i} -- {tmp_left}   --   {tmp_right}   ---   {tmp_left - tmp_right}')
+            elif self.diff_type == 1:
+                for i in range(1, self.N):
+                    # tmp_left = (self.vec_a[i+1] - self.vec_a[i]) * (self.y_i[i+1] - self.y_i[i]) / (self.h ** 2) - (self.y_i[i+1] - self.y_i[i]) / self.h
+                    # tmp_right = self.get_f_x(self.y_i[i])
+                    tmp_left = res[i - 1] * self.__get_A_i__(i) - res[i] * self.__get_C_i__(i) + res[i + 1] * self.__get_B_i__(i)
+                    tmp_right = - self.__get_F_i__(i)
+                    print(f' {i}   {tmp_left}      {tmp_right}      {tmp_left - tmp_right}')
+                print('=============================================================================================')
+                for i in range(1, self.N):
+                    tmp_left = self.vec_a[i] / (self.h ** 2) + 1 / self.h
+                    tmp_right = self.__get_A_i__(i)
+                    print(f' {i}   A   {tmp_left}      {tmp_right}      {tmp_left - tmp_right}')
+                    tmp_left = self.vec_a[i + 1] / (self.h ** 2) + self.vec_a[i] / (self.h ** 2) + 1 / self.h
+                    tmp_right = self.__get_C_i__(i)
+                    print(f' {i}   C   {tmp_left}      {tmp_right}      {tmp_left - tmp_right}')
+                    tmp_left = self.vec_a[i + 1] / (self.h ** 2)
+                    tmp_right = self.__get_B_i__(i)
+                    print(f' {i}   B   {tmp_left}      {tmp_right}      {tmp_left - tmp_right}')
+
+
+                print('=============================================================================================')
+                for i in range(1, self.N):
+                    tmp_left = self.vec_a[i + 1] * (res[i + 1] - res[i]) / (self.h ** 2) - self.vec_a[i] * (
+                                res[i] - res[i - 1]) / (self.h ** 2) - (res[i] - res[i - 1]) / self.h
+                    tmp_right = - self.__get_F_i__(i)
+                    print(f' {i}   {tmp_left}      {tmp_right}      {tmp_left - tmp_right}')
+
+                print('=============================================================================================')
+                for i in range(1, self.N):
+                    tmp_left = (self.vec_a[i + 1] * (res[i + 1] - res[i]) / self.h - self.vec_a[i] * (res[i] - res[i - 1]) / self.h) / self.h - (res[i] - res[i - 1]) / self.h
+                    tmp_right = - self.__get_F_i__(i)
+                    print(f' {i}   {tmp_left}      {tmp_right}      {tmp_left - tmp_right}')
+
+            elif self.diff_type == 3:
+                for i in range(1, self.N):
+                    tmp_left = res[i - 1] * self.__get_A_i__(i) - res[i] * self.__get_C_i__(i) + res[i + 1] * self.__get_B_i__(i)
+                    tmp_right = - self.__get_F_i__(i)
+                    print(f' {i}   {tmp_left}      {tmp_right}      {tmp_left - tmp_right}')
+                print('=============================================================================================')
             for i in range(1, self.N):
-                tmp_left = (self.vec_a[i+1] - self.vec_a[i]) * (self.y_i[i] - self.y_i[i-1]) / (self.h ** 2) + \
-                           self.vec_a[i] * (self.y_i[i-1] - 2 * self.y_i[i] + self.y_i[i+1]) / (self.h ** 2) - \
-                           self.y_i[i+1] / self.h + self.y_i[i] / self.h
-                tmp_right = self.get_f_x(self.y_i[i])
-                print(f' {i} -- {tmp_left}   --   {tmp_right}   ---   {tmp_left - tmp_right}')
-        elif self.diff_type == 1:
-            for i in range(1, self.N):
-                # tmp_left = (self.vec_a[i+1] - self.vec_a[i]) * (self.y_i[i+1] - self.y_i[i]) / (self.h ** 2) - (self.y_i[i+1] - self.y_i[i]) / self.h
-                # tmp_right = self.get_f_x(self.y_i[i])
-                tmp_left = res[i - 1] * self.__get_A_i__(i) - res[i] * self.__get_C_i__(i) + res[i + 1] * self.__get_B_i__(i)
-                tmp_right = - self.__get_F_i__(i)
-                print(f' {i}   {tmp_left}      {tmp_right}      {tmp_left - tmp_right}')
-            print('=============================================================================================')
-            for i in range(1, self.N):
-                tmp_left = self.vec_a[i] / (self.h ** 2) + 1 / self.h
+                tmp_left = self.vec_a[i] / (self.h ** 2)
                 tmp_right = self.__get_A_i__(i)
-                print(f' {i}   A   {tmp_left}      {tmp_right}      {tmp_left - tmp_right}')
-                tmp_left = self.vec_a[i + 1] / (self.h ** 2) + self.vec_a[i] / (self.h ** 2) + 1 / self.h
+                # print(f' {i}   A   {tmp_left}      {tmp_right}      {tmp_left - tmp_right}')
+                tmp_left = self.vec_a[i + 1] / (self.h ** 2) + self.vec_a[i] / (self.h ** 2) - self.p_i(i) / self.h + self.q_i(i)
                 tmp_right = self.__get_C_i__(i)
-                print(f' {i}   C   {tmp_left}      {tmp_right}      {tmp_left - tmp_right}')
-                tmp_left = self.vec_a[i + 1] / (self.h ** 2)
+                # print(f' {i}   C   {tmp_left}      {tmp_right}      {tmp_left - tmp_right}')
+                tmp_left = self.vec_a[i + 1] / (self.h ** 2) - self.p_i(i) / self.h
                 tmp_right = self.__get_B_i__(i)
-                print(f' {i}   B   {tmp_left}      {tmp_right}      {tmp_left - tmp_right}')
-
-
+                # print(f' {i}   B   {tmp_left}      {tmp_right}      {tmp_left - tmp_right}')
             print('=============================================================================================')
             for i in range(1, self.N):
-                tmp_left = self.vec_a[i + 1] * (res[i + 1] - res[i]) / (self.h ** 2) - self.vec_a[i] * (
-                            res[i] - res[i - 1]) / (self.h ** 2) - (res[i] - res[i - 1]) / self.h
+                tmp_left = res[i - 1] * self.vec_a[i] / (self.h ** 2) + \
+                           res[i] * (-self.vec_a[i + 1] / (self.h ** 2) - self.vec_a[i] / (self.h ** 2) - self.q_i(i)) + \
+                           res[i + 1] * (self.vec_a[i + 1] / (self.h ** 2)) - \
+                           self.p_i(i) * res[i + 1] / self.h + \
+                           self.p_i(i) * res[i] / self.h
                 tmp_right = - self.__get_F_i__(i)
                 print(f' {i}   {tmp_left}      {tmp_right}      {tmp_left - tmp_right}')
 
-            print('=============================================================================================')
-            for i in range(1, self.N):
-                tmp_left = (self.vec_a[i + 1] * (res[i + 1] - res[i]) / self.h - self.vec_a[i] * (res[i] - res[i - 1]) / self.h) / self.h - (res[i] - res[i - 1]) / self.h
-                tmp_right = - self.__get_F_i__(i)
-                print(f' {i}   {tmp_left}      {tmp_right}      {tmp_left - tmp_right}')
 
-        elif self.diff_type == 3:
-            for i in range(1, self.N):
-                tmp_left = res[i - 1] * self.__get_A_i__(i) - res[i] * self.__get_C_i__(i) + res[i + 1] * self.__get_B_i__(i)
-                tmp_right = - self.__get_F_i__(i)
-                print(f' {i}   {tmp_left}      {tmp_right}      {tmp_left - tmp_right}')
-            print('=============================================================================================')
-        for i in range(1, self.N):
-            tmp_left = self.vec_a[i] / (self.h ** 2)
-            tmp_right = self.__get_A_i__(i)
-            # print(f' {i}   A   {tmp_left}      {tmp_right}      {tmp_left - tmp_right}')
-            tmp_left = self.vec_a[i + 1] / (self.h ** 2) + self.vec_a[i] / (self.h ** 2) - self.p_i(i) / self.h + self.q_i(i)
-            tmp_right = self.__get_C_i__(i)
-            # print(f' {i}   C   {tmp_left}      {tmp_right}      {tmp_left - tmp_right}')
-            tmp_left = self.vec_a[i + 1] / (self.h ** 2) - self.p_i(i) / self.h
-            tmp_right = self.__get_B_i__(i)
-            # print(f' {i}   B   {tmp_left}      {tmp_right}      {tmp_left - tmp_right}')
-        print('=============================================================================================')
-        for i in range(1, self.N):
-            tmp_left = res[i - 1] * self.vec_a[i] / (self.h ** 2) + \
-                       res[i] * (-self.vec_a[i + 1] / (self.h ** 2) - self.vec_a[i] / (self.h ** 2) - self.q_i(i)) + \
-                       res[i + 1] * (self.vec_a[i + 1] / (self.h ** 2)) - \
-                       self.p_i(i) * res[i + 1] / self.h + \
-                       self.p_i(i) * res[i] / self.h
-            tmp_right = - self.__get_F_i__(i)
-            print(f' {i}   {tmp_left}      {tmp_right}      {tmp_left - tmp_right}')
-
-
+        print(f"N = {self.N + 1}")
+        print("i  |  x_i  |  u_i  |  y_i  |  y_i - u_i")
+        for i in range(0, self.N + 1):
+            u_i = self.solution_real_x(self.y_i[i])
+            print(f'{i}  |  {self.y_i[i]:.8f}   |  {u_i:.8f}  |  {res[i][0]:.8f}  |  {res[i][0] - u_i:.8f}')
 
 
 
